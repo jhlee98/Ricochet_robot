@@ -6,20 +6,29 @@ import sys
 
 np.set_printoptions(threshold=sys.maxsize)
 
-map1 = np.zeros((8,8)); map2 = np.zeros((8,8)); map3 = np.zeros((8,8)); map4 = np.zeros((8,8))
+map1 = np.zeros((8,8), dtype=int); map2 = np.zeros((8,8), dtype=int); map3 = np.zeros((8,8), dtype=int); map4 = np.zeros((8,8), dtype=int)
+map1_a = np.zeros((8,8), dtype=int); map2_a = np.zeros((8,8), dtype=int); map3_a = np.zeros((8,8), dtype=int); map4_a = np.zeros((8,8), dtype=int)
 map1[0][2] = 3; map1[0][5] = 2; map1[1][5] = 1; map1[3][7] = 2; map1[4][3] = 2; map1[5][2] = 1
 map1[7][1] = 1; map1[6][5] = 1; map1[6][6] = 2
+map1_a[6][6] = 1; map1_a[0][2] = 9; map1_a[5][3] = 13; map1_a[1][5] = 5
 map2[6][0] = 1; map2[5][1] = 2; map2[2][2] = 2; map2[3][2] = 1; map2[7][2] = 1; map2[1][3] = 1
 map2[1][4] = 2; map2[5][6] = 3; map2[2][7] = 2
+map2_a[3][2] = 2; map2_a[6][1] = 6; map2_a[5][6] = 10; map2_a[1][4] = 14
 map3[4][0] = 1; map3[4][1] = 2; map3[7][1] = 1; map3[0][2] = 2; map3[1][2] = 1; map3[6][5] = 3
 map3[1][5] = 1; map3[0][6] = 2; map3[2][7] = 2
+map3_a[4][1] = 3; map3_a[6][5] = 7; map3_a[1][6] = 11; map3_a[1][2] = 15
 map4[3][0] = 2; map4[4][0] = 1; map4[2][1] = 1; map4[1][1] = 2; map4[1][3] = 3; map4[6][3] = 1; map4[6][4] = 2
 map4[7][2] = 1; map4[5][5] = 1; map4[4][6] = 2; map4[2][7] = 2
+map4_a[5][6] = 4; map4_a[6][4] = 8; map4_a[1][3] = 12; map4_a[2][1] = 16
 map1 = map1.T; map2 = map2.T; map3 = map3.T; map4 = map4.T
+map1_a = map1_a.T; map2_a = map2_a.T; map3_a = map3_a.T; map4_a = map4_a.T
 order = [1, 2, 3, 4] ; random.shuffle(order)
 map5 = np.c_[fn.rotate_180(globals()['map{}'.format(order[0])]), np.rot90(globals()['map{}'.format(order[1])])]
 map6 = np.c_[fn.rotate_270(globals()['map{}'.format(order[2])]), globals()['map{}'.format(order[3])]]
+map7 = np.c_[fn.rotate_180(globals()['map{}_a'.format(order[0])]), np.rot90(globals()['map{}_a'.format(order[1])])]
+map8 = np.c_[fn.rotate_270(globals()['map{}_a'.format(order[2])]), globals()['map{}_a'.format(order[3])]]
 blue_map = np.concatenate((map5, map6), axis = 0)
+blue_map_a = np.concatenate((map7, map8), axis = 0)
 Gamemap = np.zeros((33,33), dtype=int)
 for ii in range(0,33):
     for jj in range(0,33):
@@ -59,15 +68,22 @@ for ii in range(0,33,2):
 Gamemap_x[7][7] = 5; Gamemap_x[7][8] = 5; Gamemap_x[9][7] = 5; Gamemap_x[9][8] = 5
 Gamemap_y[7][7] = 4; Gamemap_y[7][9] = 4; Gamemap_y[8][7] = 4; Gamemap_y[8][9] = 4
 
+game_order = [i for i in range(0,16)]; random.shuffle(game_order)
 #파이게임 시작
 pygame.init()
+
+FPS = 60
+fpsClock = pygame.time.Clock()
 
 screen_width = 640
 screen_height = 900
 darkorchid = (153, 50, 204)
 white = (255, 255, 255)
 black = (0, 0, 0)
-blue = (0, 0, 128)
+blue = (8, 164, 236)
+red = (144, 4, 20)
+purple = (168, 76, 164)
+brown = (192, 124, 84)
 space_size = 40
 GRIDLINECOLOR = (30, 30, 30)
 screen = pygame.display.set_mode((screen_width, screen_height))
@@ -132,6 +148,17 @@ font = pygame.font.Font('Roboto-Black.ttf', 32)
 text = font.render('ScoreBoard', True, black)
 textRect = text.get_rect()
 textRect.center = (320, 700)
+
+moved_number = 0 
+moved_number_text = font.render(str(moved_number), True, black)
+movedRect =moved_number_text.get_rect()
+movedRect.center = (320, 750)
+
+game_number = 0
+current_select = 0
+mouse_x_tran = 0
+mouse_y_tran = 0
+
 #print(character_map)
 #print(Gamemap_x)
 #print(Gamemap_y)
@@ -145,22 +172,72 @@ while running:
             mouse_x, mouse_y = pygame.mouse.get_pos()
             mouse_x_tran = mouse_x//40 + 1
             mouse_y_tran = mouse_y//40 + 1
-            print(mouse_x_tran, mouse_y_tran)
             current_select = character_map[mouse_y_tran-1][mouse_x_tran-1]
-            print(current_select)
 
         if event.type == pygame.KEYDOWN:
             if current_select == 1 or current_select == 2 or current_select == 3 or current_select == 4 or current_select == 5:
+                [mouse_y_tran, mouse_x_tran] = np.where(character_map == current_select)
+                mouse_y_tran = mouse_y_tran[0]+1
+                mouse_x_tran = mouse_x_tran[0]+1
                 if event.key == pygame.K_LEFT:
                     for ii in range(0,16):
                         if (mouse_x_tran-2-ii) == -1 or character_map[mouse_y_tran-1][mouse_x_tran-2-ii] > 0:
                             character_map[mouse_y_tran-1][mouse_x_tran-1] = 0
                             character_map[mouse_y_tran-1][mouse_x_tran-1-ii] = current_select
+                            if current_select < 2:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] == 0:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 3:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 17:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 4:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 5:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    game_number = game_number+1
+                                    moved_number = 0 
                             break
                         elif Gamemap_y[mouse_y_tran-1][mouse_x_tran-1-ii] == 4 :
                             character_map[mouse_y_tran-1][mouse_x_tran-1] = 0
                             character_map[mouse_y_tran-1][mouse_x_tran-1-ii] = current_select
+                            if current_select < 2:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] == 0:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 3:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 17:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 4:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 5:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    game_number = game_number+1
+                                    moved_number = 0
                             break
+                    moved_number += 1
                             
                 if event.key == pygame.K_RIGHT:
                     if mouse_x_tran == 16:
@@ -170,22 +247,120 @@ while running:
                         if (mouse_x_tran+1+ii) == 16 or character_map[mouse_y_tran-1][mouse_x_tran+1+ii] > 0 :
                             character_map[mouse_y_tran-1][mouse_x_tran-1] = 0
                             character_map[mouse_y_tran-1][mouse_x_tran+ii] = current_select
+                            if current_select < 2:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] == 0:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 3:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 17:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 4:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 5:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    game_number = game_number+1
+                                    moved_number = 0
                             break
                         if Gamemap_y[mouse_y_tran-1][mouse_x_tran+ii] == 4:
                             character_map[mouse_y_tran-1][mouse_x_tran-1] = 0
                             character_map[mouse_y_tran-1][mouse_x_tran+ii-1] = current_select
+                            if current_select < 2:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] == 0:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 3:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 17:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 4:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 5:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    game_number = game_number+1
+                                    moved_number = 0
                             break
+                    moved_number += 1
                     
                 if event.key == pygame.K_UP:
                     for ii in range(0,16):
                         if (mouse_y_tran-ii-2) == -1 or character_map[mouse_y_tran-ii-2][mouse_x_tran-1] > 0:
                             character_map[mouse_y_tran-1][mouse_x_tran-1] = 0
                             character_map[mouse_y_tran-ii-1][mouse_x_tran-1] = current_select
+                            if current_select < 2:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] == 0:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 3:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 17:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 4:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 5:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    game_number = game_number+1
+                                    moved_number = 0
                             break
                         elif Gamemap_x[mouse_y_tran-ii-1][mouse_x_tran-1] == 5:
                             character_map[mouse_y_tran-1][mouse_x_tran-1] = 0
                             character_map[mouse_y_tran-ii-1][mouse_x_tran-1] = current_select
+                            if current_select < 2:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] == 0:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 3:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 17:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 4:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 5:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    game_number = game_number+1
+                                    moved_number = 0
                             break
+                    moved_number += 1
                     
                 if event.key == pygame.K_DOWN:
                     if mouse_y_tran == 16:
@@ -195,16 +370,96 @@ while running:
                         if  (mouse_y_tran+ii+1) == 16 or character_map[mouse_y_tran+ii+1][mouse_x_tran-1] > 0 :
                             character_map[mouse_y_tran-1][mouse_x_tran-1] = 0
                             character_map[mouse_y_tran+ii][mouse_x_tran-1] = current_select
+                            if current_select < 2:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] == 0:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 3:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 17:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 4:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 5:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    game_number = game_number+1
+                                    moved_number = 0
                             break
                         elif Gamemap_x[mouse_y_tran+ii][mouse_x_tran-1] == 5:
                             character_map[mouse_y_tran-1][mouse_x_tran-1] = 0
                             character_map[mouse_y_tran+ii-1][mouse_x_tran-1] = current_select
+                            if current_select < 2:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] == 0:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 3:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 17:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 4:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 5:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    game_number = game_number+1
+                                    moved_number = 0
+                            elif current_select < 5:
+                                if blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 9:
+                                    break
+                                elif blue_map_a[mouse_y_tran-1][mouse_x_tran-1-ii] < 13:
+                                    game_number = game_number+1
+                                    moved_number = 0
                             break
+                    moved_number += 1
+            #print(character_map)
+            #print(current_select)
         
-        
-
-        
-
+    if game_order[game_number]<5:
+        answer_color = pygame.image.load("answer_red.png")
+        answer_size = answer_color.get_rect().size
+        answer_width = answer_size[0]
+        answer_height = answer_size[1]
+        ans_y_pos, ans_x_pos = np.where(blue_map_a == game_order[game_number])
+        answer_screen_x_pos = space_size * ans_x_pos + 5
+        answer_screen_y_pos = space_size * ans_y_pos + 5 
+    elif game_order[game_number]<9:
+        answer_color = pygame.image.load("answer_brown.png")
+        answer_size = answer_color.get_rect().size
+        answer_width = answer_size[0]
+        answer_height = answer_size[1]
+        ans_y_pos, ans_x_pos = np.where(blue_map_a == game_order[game_number])
+        answer_screen_x_pos = space_size * ans_x_pos + 5
+        answer_screen_y_pos = space_size * ans_y_pos + 5 
+    elif game_order[game_number]<13:
+        answer_color = pygame.image.load("answer_purple.png")
+        answer_size = answer_color.get_rect().size
+        answer_width = answer_size[0]
+        answer_height = answer_size[1]
+        ans_y_pos, ans_x_pos = np.where(blue_map_a == game_order[game_number])
+        answer_screen_x_pos = space_size * ans_x_pos + 5
+        answer_screen_y_pos = space_size * ans_y_pos + 5  
+    else:
+        answer_color = pygame.image.load("answer_blue.png")
+        answer_size = answer_color.get_rect().size
+        answer_width = answer_size[0]
+        answer_height = answer_size[1]
+        ans_y_pos, ans_x_pos = np.where(blue_map_a == game_order[game_number])
+        answer_screen_x_pos = space_size * ans_x_pos + 5
+        answer_screen_y_pos = space_size * ans_y_pos + 5     
+    
     red_y_pos, red_x_pos = np.where(character_map == 1) 
     character_red_x_pos = space_size * red_x_pos + 5
     character_red_y_pos = space_size * red_y_pos + 5
@@ -225,6 +480,9 @@ while running:
     character_black_x_pos = space_size * black_x_pos + 5
     character_black_y_pos = space_size * black_y_pos + 5
 
+    moved_number_text = font.render(str(moved_number), True, black)
+    movedRect =moved_number_text.get_rect()
+    movedRect.center = (320, 750)
     
     screen.fill(white)
     screen.blit(character_black, (character_black_x_pos, character_black_y_pos))
@@ -232,6 +490,7 @@ while running:
     screen.blit(character_brown, (character_brown_x_pos, character_brown_y_pos))
     screen.blit(character_purple, (character_purple_x_pos, character_purple_y_pos))
     screen.blit(character_red, (character_red_x_pos, character_red_y_pos))
+    screen.blit(answer_color, (answer_screen_x_pos, answer_screen_y_pos))
 
     for x in range(0, 16):
         # Draw the horizontal lines.
@@ -269,8 +528,10 @@ while running:
     pygame.draw.line(screen, GRIDLINECOLOR, (360, 280), (360, 360), width=5)
     pygame.draw.line(screen, GRIDLINECOLOR, (280, 360), (360, 360), width=5)
     screen.blit(text,textRect)  
+    screen.blit(moved_number_text,movedRect)
 
     pygame.display.update()
+    fpsClock.tick(FPS)
 
 
 pygame.quit()
