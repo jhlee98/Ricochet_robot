@@ -107,6 +107,11 @@ def Create_character_map():
     character_map[rand_array2[12]][rand_array1[10]] = 3
     character_map[rand_array2[3]][rand_array1[1]] = 4
     character_map[rand_array2[7]][rand_array1[5]] = 5
+    for ii in range(7, 9):
+        for jj in range(7, 9):
+            if character_map[ii][jj] != 0:
+                character_map[ii+2][jj-2] = character_map[ii][jj]
+                character_map[ii][jj] = 0 
     return character_map
 
 
@@ -121,4 +126,38 @@ def Create_character(img_location, character_map):
     return character, character_x_pos, character_y_pos
 
 
+def Answer_location(game_order, game_number, blue_map_a):
+    if game_order[game_number]<5:
+        answer_color = pygame.image.load("answer_red.png")
+        answer_size = answer_color.get_rect().size
+        answer_width = answer_size[0]
+        answer_height = answer_size[1]
+        ans_y_pos, ans_x_pos = np.where(blue_map_a == game_order[game_number])
+        answer_screen_x_pos = space_size * ans_x_pos 
+        answer_screen_y_pos = space_size * ans_y_pos   
+    elif game_order[game_number]<9:
+        answer_color = pygame.image.load("answer_brown.png")
+        answer_size = answer_color.get_rect().size
+        answer_width = answer_size[0]
+        answer_height = answer_size[1]
+        ans_y_pos, ans_x_pos = np.where(blue_map_a == game_order[game_number])
+        answer_screen_x_pos = space_size * ans_x_pos 
+        answer_screen_y_pos = space_size * ans_y_pos 
+    elif game_order[game_number]<13:
+        answer_color = pygame.image.load("answer_purple.png")
+        answer_size = answer_color.get_rect().size
+        answer_width = answer_size[0]
+        answer_height = answer_size[1]
+        ans_y_pos, ans_x_pos = np.where(blue_map_a == game_order[game_number])
+        answer_screen_x_pos = space_size * ans_x_pos 
+        answer_screen_y_pos = space_size * ans_y_pos 
+    else:
+        answer_color = pygame.image.load("answer_blue.png")
+        answer_size = answer_color.get_rect().size
+        answer_width = answer_size[0]
+        answer_height = answer_size[1]
+        ans_y_pos, ans_x_pos = np.where(blue_map_a == game_order[game_number])
+        answer_screen_x_pos = space_size * ans_x_pos 
+        answer_screen_y_pos = space_size * ans_y_pos 
+    return answer_color, answer_screen_x_pos, answer_screen_y_pos
 
