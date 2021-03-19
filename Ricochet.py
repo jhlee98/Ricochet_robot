@@ -2,7 +2,7 @@ import pygame
 import numpy as np
 import functions as fn
 import random
-import sys
+import sys, os
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -31,15 +31,15 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 
 pygame.display.set_caption("Ricochet game")
 
-background = pygame.image.load("Ricochet_background.png")
+background = pygame.image.load(fn.resource_path("Ricochet_background.png"))
 
 character_map = fn.Create_character_map()
 
-character_red, character_red_x_pos, character_red_y_pos = fn.Create_character("character_red.png", character_map)
-character_blue, character_blue_x_pos, character_blue_y_pos = fn.Create_character("character_blue.png", character_map)
-character_brown, character_brown_x_pos, character_brown_y_pos = fn.Create_character("character_brown.png", character_map)
-character_purple, character_purple_x_pos, character_purple_y_pos = fn.Create_character("character_purple.png", character_map)
-character_black, character_black_x_pos, character_black_y_pos = fn.Create_character("character_black.png", character_map)
+character_red, character_red_x_pos, character_red_y_pos = fn.Create_character(fn.resource_path("character_red.png"), character_map)
+character_blue, character_blue_x_pos, character_blue_y_pos = fn.Create_character(fn.resource_path("character_blue.png"), character_map)
+character_brown, character_brown_x_pos, character_brown_y_pos = fn.Create_character(fn.resource_path("character_brown.png"), character_map)
+character_purple, character_purple_x_pos, character_purple_y_pos = fn.Create_character(fn.resource_path("character_purple.png"), character_map)
+character_black, character_black_x_pos, character_black_y_pos = fn.Create_character(fn.resource_path("character_black.png"), character_map)
 
 font = pygame.font.Font('Roboto-Black.ttf', 32)
 text = font.render('number of moved', True, black)

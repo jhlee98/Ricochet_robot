@@ -2,7 +2,7 @@ import pygame
 import numpy as np
 import functions as fn
 import random
-import sys
+import sys, os
 
 screen_width = 640
 screen_height = 900
@@ -15,6 +15,12 @@ purple = (168, 76, 164)
 brown = (192, 124, 84)
 space_size = 40
 GRIDLINECOLOR = (30, 30, 30)
+
+
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
 
 
 def rotate_180(mat):
@@ -128,7 +134,7 @@ def Create_character(img_location, character_map):
 
 def Answer_location(game_order, game_number, blue_map_a):
     if game_order[game_number]<5:
-        answer_color = pygame.image.load("answer_red.png")
+        answer_color = pygame.image.load(resource_path("answer_red.png"))
         answer_size = answer_color.get_rect().size
         answer_width = answer_size[0]
         answer_height = answer_size[1]
@@ -136,7 +142,7 @@ def Answer_location(game_order, game_number, blue_map_a):
         answer_screen_x_pos = space_size * ans_x_pos 
         answer_screen_y_pos = space_size * ans_y_pos   
     elif game_order[game_number]<9:
-        answer_color = pygame.image.load("answer_brown.png")
+        answer_color = pygame.image.load(resource_path("answer_brown.png"))
         answer_size = answer_color.get_rect().size
         answer_width = answer_size[0]
         answer_height = answer_size[1]
@@ -144,7 +150,7 @@ def Answer_location(game_order, game_number, blue_map_a):
         answer_screen_x_pos = space_size * ans_x_pos 
         answer_screen_y_pos = space_size * ans_y_pos 
     elif game_order[game_number]<13:
-        answer_color = pygame.image.load("answer_purple.png")
+        answer_color = pygame.image.load(resource_path("answer_purple.png"))
         answer_size = answer_color.get_rect().size
         answer_width = answer_size[0]
         answer_height = answer_size[1]
@@ -152,7 +158,7 @@ def Answer_location(game_order, game_number, blue_map_a):
         answer_screen_x_pos = space_size * ans_x_pos 
         answer_screen_y_pos = space_size * ans_y_pos 
     else:
-        answer_color = pygame.image.load("answer_blue.png")
+        answer_color = pygame.image.load(resource_path("answer_blue.png"))
         answer_size = answer_color.get_rect().size
         answer_width = answer_size[0]
         answer_height = answer_size[1]
